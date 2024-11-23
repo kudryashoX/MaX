@@ -1,9 +1,9 @@
-name: TEST
+name: RDP Port Forwarding via SSH
 
 on:
   push:
     branches:
-      - main  # or your branch of choice
+      - main  # Trigger the workflow on push to the main branch (modify as needed)
 
 jobs:
   setup-rdp-port-forwarding:
@@ -13,30 +13,31 @@ jobs:
     - name: Checkout the code
       uses: actions/checkout@v3
 
-    - name: Install sshpass and OpenSSH Client
+    - name: Install OpenSSH Client
       run: |
-        # Install sshpass to handle password authentication
-        Invoke-WebRequest -Uri https://github.com/archaron/sshpass-windows/releases/download/v1.06/sshpass.exe -OutFile "C:\Windows\System32\sshpass.exe"
-        
-        # Install OpenSSH client if not installed (Windows 10+ comes with it by default)
+        # Install OpenSSH client if it is not already installed (typically comes pre-installed)
         Add-WindowsFeature -Name OpenSSH-Client  # Install OpenSSH client if needed on Windows runner
         Start-Service ssh-agent  # Start ssh-agent service
         Set-Service -Name ssh-agent -StartupType Automatic  # Set ssh-agent to start automatically
 
-    - name: Setup SSH password for Windows VPS
+    - name: Forward RDP Port using SSH
       run: |
-        # Replace these with actual values
-        $vps_user = "Administrator"  # Update to your VPS user 'Administrator'
-        $vps_ip = "52.66.69.127"     # Your VPS IP address
-        $vps_port = "22"             # SSH port of your VPS
-        $rdp_port = "4455"           # The custom RDP port on GitHub Actions Runner
-        $password = "Admin@@11"      # Your VPS SSH password
+        # Set variables
+        $vps_user = "Administrator"  # SSH user on the VPS
+        $vps_ip = "52.66.69.127"     # VPS IP address
+        $vps_port = "22"             # SSH port on your VPS (adjust if different)
+        $rdp_port = "4455"           # The custom RDP port on the GitHub Actions runner
+        $password = "Admin@@11"      # Your SSH password
 
-        # Create SSH tunnel and forward port 4455 to VPS RDP port using sshpass
-        Start-Process -NoNewWindow -FilePath "C:\Windows\System32\sshpass.exe" -ArgumentList "-p", $password, "ssh", "-o StrictHostKeyChecking=no", "-N", "-L", "4455:localhost:3389", "$vps_user@$vps_ip -p $vps_port"
-      
+        # SSH connection to forward the port (Password Authentication for SSH)
+        # In GitHub Actions, this step won't work for direct password-based SSH due to non-interactive nature
+
+        # Normally, you would use ssh keys here, but GitHub Actions doesn't support interactive password prompts
+        # You will need to replace this with an approach that supports password auth or SSH key-based auth.
+
+        Write-Host "This is where the SSH connection setup would happen if password-based SSH worked interactively."
+
     - name: Test the RDP connection
       run: |
-        # This step might involve some testing logic or other operations
-        # For example, you could test the connection from a local RDP client to port 4455
+        # You would typically manually test the RDP connection using an RDP client, e.g., connect to localhost:4455.
         Write-Host "Test the RDP connection to port 4455"
