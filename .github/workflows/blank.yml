@@ -1,0 +1,42 @@
+name: TEST
+
+on:
+  push:
+    branches:
+      - main  # or your branch of choice
+
+jobs:
+  setup-rdp-port-forwarding:
+    runs-on: windows-latest  # Or your self-hosted Windows runner
+    
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v3
+
+    - name: Install sshpass and OpenSSH Client
+      run: |
+        # Install sshpass to handle password authentication
+        Invoke-WebRequest -Uri https://github.com/archaron/sshpass-windows/releases/download/v1.06/sshpass.exe -OutFile "C:\Windows\System32\sshpass.exe"
+        
+        # Install OpenSSH client if not installed (Windows 10+ comes with it by default)
+        Add-WindowsFeature -Name OpenSSH-Client  # Install OpenSSH client if needed on Windows runner
+        Start-Service ssh-agent  # Start ssh-agent service
+        Set-Service -Name ssh-agent -StartupType Automatic  # Set ssh-agent to start automatically
+
+    - name: Setup SSH password for Windows VPS
+      run: |
+        # Replace these with actual values
+        $vps_user = "Administrator"  # Update to your VPS user 'Administrator'
+        $vps_ip = "52.66.69.127"     # Your VPS IP address
+        $vps_port = "22"             # SSH port of your VPS
+        $rdp_port = "4455"           # The custom RDP port on GitHub Actions Runner
+        $password = "Admin@@11"      # Your VPS SSH password
+
+        # Create SSH tunnel and forward port 4455 to VPS RDP port using sshpass
+        Start-Process -NoNewWindow -FilePath "C:\Windows\System32\sshpass.exe" -ArgumentList "-p", $password, "ssh", "-o StrictHostKeyChecking=no", "-N", "-L", "4455:localhost:3389", "$vps_user@$vps_ip -p $vps_port"
+      
+    - name: Test the RDP connection
+      run: |
+        # This step might involve some testing logic or other operations
+        # For example, you could test the connection from a local RDP client to port 4455
+        Write-Host "Test the RDP connection to port 4455"
